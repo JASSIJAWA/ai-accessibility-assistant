@@ -1,133 +1,200 @@
 /* ========================================
-   App.css — Dashboard Layout & Theme
+   App.css — Sidebar + Glassmorphism Layout
+   Optimized: no heavy animations, 
+   uses GPU-accelerated backdrop-filter
    ======================================== */
 
-.dashboard {
-  min-height: 100vh;
-  background: #0f1021;
-  color: #e0e0ef;
+/* ---------- Root Layout ---------- */
+.app {
   display: flex;
-  flex-direction: column;
+  height: 100vh;
+  background: linear-gradient(135deg, #0a0a1a 0%, #12122a 50%, #1a0a2e 100%);
 }
 
-/* ---------- Navbar ---------- */
-.navbar {
+/* ---------- Sidebar ---------- */
+.sidebar {
+  width: 68px;
+  background: rgba(15, 15, 35, 0.8);
+  backdrop-filter: blur(12px);
+  border-right: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1rem 0;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  font-size: 1.6rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  width: 80%;
+  text-align: center;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.sidebar-bottom {
+  margin-top: auto;
+}
+
+.nav-btn {
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 12px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  transition: background 0.2s;
+}
+
+.nav-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-btn.active {
+  background: rgba(139, 92, 246, 0.25);
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);
+}
+
+/* ---------- Main Content ---------- */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ---------- Top Bar ---------- */
+.topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
-  background: #151630;
-  border-bottom: 1px solid #2d2e4a;
+  padding: 0.85rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
 }
 
-.navbar-brand {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.brand-icon {
-  font-size: 1.8rem;
-}
-
-.navbar-brand h1 {
-  font-size: 1.3rem;
+.topbar-title {
+  font-size: 1.15rem;
   font-weight: 700;
-  color: #e0e0ef;
-  margin: 0;
-  letter-spacing: -0.5px;
+  color: #f0f0ff;
+  letter-spacing: -0.3px;
 }
 
-.status-badge {
-  font-size: 0.8rem;
-  padding: 0.35rem 0.85rem;
+.topbar-subtitle {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 2px;
+}
+
+.status-pill {
+  font-size: 0.75rem;
+  padding: 0.3rem 0.75rem;
   border-radius: 20px;
   font-weight: 600;
 }
 
-.status-badge.connected {
-  background: rgba(0, 200, 83, 0.15);
-  color: #00c853;
-  border: 1px solid rgba(0, 200, 83, 0.3);
+.status-pill.live {
+  background: rgba(0, 200, 83, 0.12);
+  color: #34d399;
+  border: 1px solid rgba(0, 200, 83, 0.2);
 }
 
-/* ---------- Dashboard Grid ---------- */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 1.3fr 1fr 1fr;
-  gap: 1.25rem;
-  padding: 1.25rem 2rem;
+/* ---------- Content Grid ---------- */
+.content-grid {
   flex: 1;
-}
-
-.grid-camera,
-.grid-transcript,
-.grid-alerts {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  grid-template-rows: 1.6fr 1fr;
+  gap: 0.85rem;
+  padding: 0.85rem 1.5rem 1rem;
   min-height: 0;
 }
 
-/* ---------- Panel Header (shared) ---------- */
+.card-camera {
+  grid-row: 1 / 3;
+}
+
+.card-transcript {
+  grid-row: 1;
+  grid-column: 2;
+}
+
+.card-alerts {
+  grid-row: 2;
+  grid-column: 2;
+}
+
+/* ---------- Glass Card ---------- */
+.card {
+  background: rgba(20, 20, 45, 0.6);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Shared Panel Header ---------- */
 .panel-header {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  padding: 0.85rem 1rem;
-  border-bottom: 1px solid #2d2e4a;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
 }
 
 .panel-header h2 {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #e0e0ef;
-  margin: 0;
   flex: 1;
 }
 
 .panel-icon {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
 }
 
 .status-dot {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: #6b6d8a;
+  background: #4b4b6b;
 }
 
 .status-dot.active {
-  background: #00c853;
-  box-shadow: 0 0 8px rgba(0, 200, 83, 0.5);
-}
-
-/* ---------- Footer ---------- */
-.dashboard-footer {
-  text-align: center;
-  padding: 0.75rem;
-  color: #6b6d8a;
-  font-size: 0.75rem;
-  border-top: 1px solid #2d2e4a;
-}
-
-.dashboard-footer p {
-  margin: 0;
+  background: #34d399;
+  box-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
 }
 
 /* ---------- Responsive ---------- */
 @media (max-width: 1024px) {
-  .dashboard-grid {
+  .sidebar { display: none; }
+  .content-grid {
     grid-template-columns: 1fr;
-    padding: 1rem;
+    grid-template-rows: auto;
+    padding: 0.75rem;
   }
+  .card-camera { grid-row: auto; }
+  .card-transcript { grid-column: 1; }
+  .card-alerts { grid-column: 1; }
 }
 
 @media (max-width: 768px) {
-  .navbar {
-    flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.75rem 1rem;
-  }
-  .dashboard-grid {
-    padding: 0.75rem;
-    gap: 0.75rem;
-  }
+  .topbar { padding: 0.6rem 0.75rem; }
+  .content-grid { padding: 0.5rem; gap: 0.5rem; }
 }

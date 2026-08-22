@@ -5,40 +5,54 @@ import './App.css'
 
 function App() {
   return (
-    <div className="dashboard">
-      {/* Top Navigation Bar */}
-      <header className="navbar">
-        <div className="navbar-brand">
-          <span className="brand-icon">♿</span>
-          <h1>AI Accessibility Assistant</h1>
+    <div className="app">
+      {/* Sidebar Navigation */}
+      <aside className="sidebar">
+        <div className="sidebar-logo">♿</div>
+        <nav className="sidebar-nav">
+          <button className="nav-btn active" title="Vision">
+            <span>👁️</span>
+          </button>
+          <button className="nav-btn" title="Audio">
+            <span>🎙️</span>
+          </button>
+          <button className="nav-btn" title="Alerts">
+            <span>🔔</span>
+          </button>
+        </nav>
+        <div className="sidebar-bottom">
+          <button className="nav-btn" title="Settings">
+            <span>⚙️</span>
+          </button>
         </div>
-        <div className="navbar-status">
-          <span className="status-badge connected">● Backend Connected</span>
-        </div>
-      </header>
+      </aside>
 
-      {/* Main Dashboard Grid */}
-      <main className="dashboard-grid">
-        {/* Left Column - Camera Feed (for Visually Impaired) */}
-        <section className="grid-camera">
-          <CameraFeed />
-        </section>
+      {/* Main Content */}
+      <div className="main-content">
+        {/* Top Bar */}
+        <header className="topbar">
+          <div>
+            <h1 className="topbar-title">AI Accessibility Assistant</h1>
+            <p className="topbar-subtitle">Real-time vision & audio assistance</p>
+          </div>
+          <div className="topbar-right">
+            <span className="status-pill live">● Live</span>
+          </div>
+        </header>
 
-        {/* Middle Column - Live Transcript (for Hearing Impaired) */}
-        <section className="grid-transcript">
-          <TranscriptPanel />
-        </section>
-
-        {/* Right Column - Alerts & Stats */}
-        <section className="grid-alerts">
-          <AlertPanel />
-        </section>
-      </main>
-
-      {/* Footer */}
-      <footer className="dashboard-footer">
-        <p>AI Accessibility Assistant — 7th Semester Major Project</p>
-      </footer>
+        {/* Dashboard Grid */}
+        <main className="content-grid">
+          <div className="card card-camera">
+            <CameraFeed />
+          </div>
+          <div className="card card-transcript">
+            <TranscriptPanel />
+          </div>
+          <div className="card card-alerts">
+            <AlertPanel />
+          </div>
+        </main>
+      </div>
     </div>
   )
 }
