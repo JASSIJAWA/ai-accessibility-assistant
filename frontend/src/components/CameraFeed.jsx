@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from 'react';
-import './CameraFeed.css';
 
 function CameraFeed() {
   const videoRef = useRef(null);
@@ -8,16 +7,14 @@ function CameraFeed() {
 
   useEffect(() => {
     startCamera();
-    // Cleanup: stop camera when component unmounts
     return () => stopCamera();
   }, []);
 
   const startCamera = async () => {
     try {
-      // This is the browser API that requests permission to use the webcam
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480, facingMode: 'user' },
-        audio: false, // We handle audio separately in the transcript module
+        audio: false,
       });
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
@@ -33,26 +30,32 @@ function CameraFeed() {
 
   const stopCamera = () => {
     if (videoRef.current && videoRef.current.srcObject) {
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach((track) => track.stop());
+      videoRef.current.srcObject.getTracks().forEach((t) => t.stop());
       videoRef.current.srcObject = null;
       setIsStreaming(false);
     }
   };
 
   return (
-    <div className="camera-feed">
-      <div className="panel-header">
-        <span className="panel-icon">👁️</span>
-        <h2>Vision Assistant</h2>
-        <span className={`status-dot ${isStreaming ? 'active' : ''}`}></span>
+    <>
+      {/* Header */}
+      <div className="flex items-center gap-2 px-4 py-3 border-b border-white/5 flex-shrink-0">
+        <span className="text-lg">👁️</span>
+        <h2 className="text-sm font-semibold text-gray-200 flex-1">Vision Assistant</h2>
+        <span className={`w-2.5 h-2.5 rounded-full ${isStreaming ? 'bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]' : 'bg-gray-600'}`} />
       </div>
 
-      <div className="video-container">
+      {/* Video */}
+      <div className="flex-1 bg-[#050510] flex items-center justify-center min-h-0">
         {error ? (
-          <div className="camera-error">
+          <div className="text-center text-red-400 p-8">
             <p>⚠️ {error}</p>
-            <button onClick={startCamera}>Retry</button>
+            <button
+              onClick={startCamera}
+              className="mt-4 px-6 py-2 bg-purple-500/30 border border-purple-500/40 rounded-lg text-white text-sm hover:bg-purple-500/50 transition-colors"
+            >
+              Retry
+            </button>
           </div>
         ) : (
           <video
@@ -60,18 +63,18 @@ function CameraFeed() {
             autoPlay
             playsInline
             muted
-            className="video-stream"
+            className="w-full h-full object-cover -scale-x-100"
           />
         )}
       </div>
 
-      {/* AI detection results will appear here in Phase 2 */}
-      <div className="detection-results">
-        <p className="placeholder-text">
+      {/* Detection Results Placeholder */}
+      <div className="px-4 py-3 border-t border-white/5 flex-shrink-0">
+        <p className="text-white/25 text-xs text-center">
           🔍 AI detection will appear here once the Vision module is connected.
         </p>
       </div>
-    </div>
+    </>
   );
 }
 

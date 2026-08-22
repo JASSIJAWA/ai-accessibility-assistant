@@ -1,34 +1,16 @@
-/* ========================================
-   index.css — Global Reset & Base Styles
-   Lightweight reset for fast rendering
-   ======================================== */
+@import "tailwindcss";
 
-*, *::before, *::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-
-body {
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: #0a0a1a;
-  color: #e0e0ef;
-  -webkit-font-smoothing: antialiased;
-  overflow: hidden;
-  height: 100vh;
-}
-
-#root {
-  height: 100vh;
-  overflow: hidden;
-}
-
-button {
-  font-family: inherit;
-  cursor: pointer;
-}
-
-/* Thin scrollbar */
+/* Custom scrollbar */
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+/* Pulse animation for mic button */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.animate-pulse-ring {
+  animation: pulse-ring 1.5s infinite;
+}
