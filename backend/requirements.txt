@@ -1,6 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
 opencv-python
 mediapipe
 websockets
 python-multipart
+numpy
+ultralytics
+deepface
+tf-keras

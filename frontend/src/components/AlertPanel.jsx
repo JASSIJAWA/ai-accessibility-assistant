@@ -1,15 +1,49 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
-function AlertPanel() {
-  const [alerts] = useState([
+function AlertPanel({ visionData }) {
+  const [alerts, setAlerts] = useState([
     { id: 1, type: 'info', icon: '🟢', message: 'System initialized successfully', time: 'Just now' },
   ]);
 
+  // Derive live stats from vision data
+  const objectCount = visionData?.object_count || 0;
+  const dominantEmotion = visionData?.emotions?.[0]?.emotion || '--';
+  const emotionEmoji = {
+    happy: '😊', sad: '😢', angry: '😠', surprise: '😲',
+    fear: '😨', disgust: '🤢', neutral: '😐',
+  };
+
+  // Add alerts when new things are detected
+  useEffect(() => {
+    if (!visionData) return;
+
+    // Alert on new person detected with emotion
+    if (visionData.emotions?.length > 0) {
+      const emotion = visionData.emotions[0];
+      if (emotion.confidence > 60) {
+        const newAlert = {
+          id: Date.now(),
+          type: emotion.emotion === 'angry' ? 'danger' : emotion.emotion === 'happy' ? 'info' : 'warning',
+          icon: emotionEmoji[emotion.emotion] || '👤',
+          message: `Person detected — appears ${emotion.emotion} (${Math.round(emotion.confidence)}%)`,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+
+        setAlerts((prev) => {
+          // Avoid duplicate rapid alerts
+          const recent = prev[0];
+          if (recent && recent.message === newAlert.message) return prev;
+          return [newAlert, ...prev].slice(0, 20); // Keep last 20
+        });
+      }
+    }
+  }, [visionData]);
+
   const stats = [
-    { icon: '👁️', value: '0', label: 'Objects' },
-    { icon: '😊', value: '--', label: 'Emotion' },
+    { icon: '👁️', value: String(objectCount), label: 'Objects' },
+    { icon: emotionEmoji[dominantEmotion] || '😊', value: dominantEmotion, label: 'Emotion' },
     { icon: '🔊', value: '0', label: 'Sounds' },
-    { icon: '📝', value: '0', label: 'Words' },
+    { icon: '👤', value: String(visionData?.face_count || 0), label: 'Faces' },
   ];
 
   const borderColors = {
@@ -32,7 +66,7 @@ function AlertPanel() {
           <div key={stat.label} className="flex items-center gap-2.5 bg-white/[0.03] border border-white/5 rounded-xl px-3 py-2.5">
             <span className="text-xl">{stat.icon}</span>
             <div>
-              <p className="text-gray-100 text-base font-bold leading-tight">{stat.value}</p>
+              <p className="text-gray-100 text-base font-bold leading-tight capitalize">{stat.value}</p>
               <p className="text-white/25 text-[0.6rem] uppercase tracking-wide">{stat.label}</p>
             </div>
           </div>
