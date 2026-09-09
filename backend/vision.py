@@ -77,7 +77,7 @@ def detect_emotions(frame: np.ndarray) -> list:
             actions=["emotion"],
             enforce_detection=False,
             silent=True,
-            detector_backend="opencv",  # Fastest detector
+            detector_backend="mtcnn",  # More reliable face detector
         )
 
         emotions = []
