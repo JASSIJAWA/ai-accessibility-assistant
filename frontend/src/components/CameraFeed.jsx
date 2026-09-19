@@ -14,6 +14,43 @@ function CameraFeed({ onDetectionUpdate }) {
   const [error, setError] = useState(null);
   const [detections, setDetections] = useState({ objects: [], emotions: [] });
 
+  // Start sending frames once streaming
+  useEffect(() => {
+    let isActive = true;
+
+    const captureAndSend = async () => {
+      if (!isActive) return;
+      
+      // If ready, send a frame
+      if (isStreaming && isConnected && videoRef.current && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (canvas && video.videoWidth > 0) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0);
+          const base64 = canvas.toDataURL('image/jpeg', 0.5); // Lower quality slightly for speed
+          wsRef.current.send(base64);
+        }
+      }
+      
+      // Wait a short moment then try again (let the onmessage handler trigger the real fast loop if we want, but a simple polling with requestAnimationFrame or setTimeout is fine).
+      // Actually, since we want to wait for the backend, we should trigger the NEXT frame inside the onmessage handler!
+      // But to kick it off or keep it alive if a message drops, we use a slow fallback interval:
+      intervalRef.current = setTimeout(captureAndSend, 1000); 
+    };
+
+    if (isStreaming && isConnected) {
+      captureAndSend(); // Kick off the loop
+    }
+
+    return () => {
+      isActive = false;
+      if (intervalRef.current) clearTimeout(intervalRef.current);
+    };
+  }, [isStreaming, isConnected]);
+
   // Connect to backend WebSocket
   const connectWebSocket = useCallback(() => {
     try {
@@ -29,8 +66,29 @@ function CameraFeed({ onDetectionUpdate }) {
           const result = JSON.parse(event.data);
           if (!result.error) {
             setDetections(result);
-            // Notify parent component (App) about detection updates
             if (onDetectionUpdate) onDetectionUpdate(result);
+          }
+          
+          // FAST LOOP: As soon as we get a result, instantly send the NEXT frame (if video is active)
+          if (videoRef.current && videoRef.current.readyState >= 2 && wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+            const video = videoRef.current;
+            const canvas = canvasRef.current;
+            if (canvas && video.videoWidth > 0) {
+              canvas.width = video.videoWidth;
+              canvas.height = video.videoHeight;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(video, 0, 0);
+              const base64 = canvas.toDataURL('image/jpeg', 0.5);
+              wsRef.current.send(base64);
+              
+              // Reset the fallback timeout so we don't send duplicate frames
+              if (intervalRef.current) clearTimeout(intervalRef.current);
+              intervalRef.current = setTimeout(() => {
+                 if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                     wsRef.current.send(base64);
+                 }
+              }, 1000);
+            }
           }
         } catch (e) {
           console.error('Failed to parse AI result:', e);
@@ -40,7 +98,6 @@ function CameraFeed({ onDetectionUpdate }) {
       ws.onclose = () => {
         console.log('❌ Vision WebSocket disconnected');
         setIsConnected(false);
-        // Reconnect after 3 seconds
         setTimeout(connectWebSocket, 3000);
       };
 
@@ -53,7 +110,7 @@ function CameraFeed({ onDetectionUpdate }) {
       console.error('WebSocket connection failed:', e);
       setIsConnected(false);
     }
-  }, [onDetectionUpdate]);
+  }, [onDetectionUpdate]); // Removed isStreaming to prevent infinite loop
 
   // Start webcam
   const startCamera = async () => {
@@ -82,24 +139,6 @@ function CameraFeed({ onDetectionUpdate }) {
     }
   };
 
-  // Capture a frame from the video and send it to the backend
-  const sendFrame = useCallback(() => {
-    if (!videoRef.current || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
-
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!canvas || video.videoWidth === 0) return;
-
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(video, 0, 0);
-
-    // Convert to base64 JPEG (smaller than PNG)
-    const base64 = canvas.toDataURL('image/jpeg', 0.6);
-    wsRef.current.send(base64);
-  }, []);
-
   // Initialize camera and WebSocket on mount
   useEffect(() => {
     startCamera();
@@ -108,21 +147,9 @@ function CameraFeed({ onDetectionUpdate }) {
     return () => {
       stopCamera();
       if (wsRef.current) wsRef.current.close();
-      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (intervalRef.current) clearTimeout(intervalRef.current);
     };
-  }, [connectWebSocket]);
-
-  // Start sending frames once streaming
-  useEffect(() => {
-    if (isStreaming && isConnected) {
-      intervalRef.current = setInterval(sendFrame, FRAME_INTERVAL);
-    } else {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [isStreaming, isConnected, sendFrame]);
+  }, []); // Empty array ensures this only runs ONCE on mount
 
   // Generate TTS announcement for emotions
   useEffect(() => {
@@ -206,7 +233,7 @@ function CameraFeed({ onDetectionUpdate }) {
                   height: `${((obj.box.y2 - obj.box.y1) / fs.height) * 100}%`,
                 };
                 return (
-                  <div key={`obj-${i}`} className="absolute border-2 border-emerald-400 rounded-sm" style={style}>
+                  <div key={`obj-${i}`} className="absolute border-2 border-emerald-400 rounded-sm transition-all duration-300 ease-linear" style={style}>
                     <span className="absolute -top-5 left-0 bg-emerald-500/80 text-white text-[0.6rem] px-1.5 py-0.5 rounded -scale-x-100 whitespace-nowrap">
                       {obj.label} {Math.round(obj.confidence * 100)}%
                     </span>
@@ -237,7 +264,7 @@ function CameraFeed({ onDetectionUpdate }) {
                 const [borderColor, bgColor] = colors.split(' ');
 
                 return (
-                  <div key={`emo-${i}`} className={`absolute border-2 ${borderColor} rounded-sm`} style={style}>
+                  <div key={`emo-${i}`} className={`absolute border-2 ${borderColor} rounded-sm transition-all duration-300 ease-linear`} style={style}>
                     <span className={`absolute -top-5 left-0 ${bgColor} text-white text-[0.6rem] px-1.5 py-0.5 rounded -scale-x-100 whitespace-nowrap`}>
                       {face.emotion} {Math.round(face.confidence)}%
                     </span>

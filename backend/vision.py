@@ -20,8 +20,8 @@ def get_deepface():
     return _deepface
 
 
-# Load YOLOv8 nano model (fast + lightweight, perfect for real-time)
-yolo_model = YOLO("yolov8n.pt")
+# Load YOLOv8 small model (better accuracy than nano, still fast enough for real-time)
+yolo_model = YOLO("yolov8s.pt")
 
 
 def decode_frame(base64_data: str) -> np.ndarray:
@@ -36,7 +36,7 @@ def decode_frame(base64_data: str) -> np.ndarray:
     return frame
 
 
-def detect_objects(frame: np.ndarray, conf_threshold: float = 0.4) -> list:
+def detect_objects(frame: np.ndarray, conf_threshold: float = 0.45) -> list:
     """
     Run YOLOv8 object detection on a frame.
     Returns a list of detections: [{label, confidence, box: {x1, y1, x2, y2}}]
@@ -75,9 +75,9 @@ def detect_emotions(frame: np.ndarray) -> list:
         results = DeepFace.analyze(
             frame,
             actions=["emotion"],
-            enforce_detection=False,
+            enforce_detection=True,
             silent=True,
-            detector_backend="mtcnn",  # More reliable face detector
+            detector_backend="ssd",  # SSD is much better at finding faces than opencv
         )
 
         emotions = []
@@ -98,6 +98,11 @@ def detect_emotions(frame: np.ndarray) -> list:
             })
 
         return emotions
+    except ValueError as e:
+        # DeepFace throws ValueError when no face is detected with enforce_detection=True
+        if "Face could not be detected" not in str(e):
+            print(f"Emotion detection error: {e}")
+        return []
     except Exception as e:
         print(f"Emotion detection error: {e}")
         return []
@@ -111,6 +116,9 @@ def process_frame(base64_data: str) -> dict:
     3. Run emotion recognition
     4. Return combined results as JSON
     """
+    import time
+    start_t = time.time()
+    
     frame = decode_frame(base64_data)
     if frame is None:
         return {"error": "Failed to decode frame"}
@@ -120,6 +128,9 @@ def process_frame(base64_data: str) -> dict:
 
     objects = detect_objects(frame)
     emotions = detect_emotions(frame)
+    
+    elapsed = round((time.time() - start_t) * 1000)
+    print(f"Processed frame in {elapsed}ms | Objects: {len(objects)} | Faces: {len(emotions)}", flush=True)
 
     return {
         "frame_size": {"width": w, "height": h},
