@@ -11,3 +11,13 @@ env/
 node_modules/
 dist/
 .DS_Store
+
+# Machine Learning Models
+*.pt
+*.traineddata
+
+# Environment
+.env
+
+# Research & Scratch
+repos_analysis/
